@@ -42,6 +42,7 @@ func (r returnRequest) isValid() bool {
 }
 
 func (s *server) processReturn(w http.ResponseWriter, r *http.Request) error {
+	defer r.Body.Close()
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return fmt.Errorf("request body read error : %w", err)

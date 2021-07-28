@@ -34,6 +34,7 @@ func (s *server) addNewFilm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	defer r.Body.Close()
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		//Handle Corrupted Payload
@@ -68,6 +69,7 @@ func (s *server) addNewFilm(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) addRegularFilm(w http.ResponseWriter, r *http.Request) error {
+	defer r.Body.Close()
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return fmt.Errorf("request body read error : %w", err)
@@ -101,6 +103,7 @@ func (s *server) addOldFilm(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *server) addFilm(w http.ResponseWriter, r *http.Request, fx func(name string, director string) error) error {
+	defer r.Body.Close()
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return fmt.Errorf("request body read error : %w", err)
