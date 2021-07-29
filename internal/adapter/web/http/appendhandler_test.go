@@ -105,7 +105,7 @@ func TestFilmAppeneder_CorruptedPayload(t *testing.T) {
 }
 
 func TestFilmAppeneder_AlreadyExists(t *testing.T) {
-	spyAppender := newSpyFilmAppender(&driven.FilmAlreadyExist{Name: FilmName})
+	spyAppender := newSpyFilmAppender(&driven.FilmAlreadyExistError{Name: FilmName})
 	server := New(nil, spyAppender, nil)
 
 	appendReq := appendRequest{Name: FilmName, Director: FilmDirector}

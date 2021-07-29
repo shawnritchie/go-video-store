@@ -133,7 +133,7 @@ func TestInvoicer_CorruptedRequestPayload(t *testing.T) {
 
 func TestInvoicer_InvalidRentalRequest(t *testing.T) {
 	totalCost := domain.SEK(20)
-	spyInvoicer := NewSpyFilmInvoicer(totalCost, &driven.InvalidRentalRequest{fmt.Errorf("invalid film")})
+	spyInvoicer := NewSpyFilmInvoicer(totalCost, &driven.InvalidRentalRequestError{fmt.Errorf("invalid film")})
 	server := New(nil, nil, spyInvoicer)
 
 	returnReq := returnRequest{

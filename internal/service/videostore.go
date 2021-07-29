@@ -44,7 +44,7 @@ func (svc *StoreService) Invoice(request []driven.FilmReturn) (*domain.RentalInv
 	}
 
 	if invoice, errors := rentalRequest.Invoice(); errors != nil {
-		error := driven.InvalidRentalRequest(errors)
+		error := driven.InvalidRentalRequestError(errors)
 		return nil, &error
 	} else {
 		return &invoice, nil
@@ -66,8 +66,8 @@ func (svc *StoreService) addFilm(film domain.Film) error {
 	return nil
 }
 
-func (svc *StoreService) validateFilmReturn(request []driven.FilmReturn) (req domain.RentalReturn, invalidReq driven.InvalidRentalRequest) {
-	invalidReq = driven.InvalidRentalRequest{}
+func (svc *StoreService) validateFilmReturn(request []driven.FilmReturn) (req domain.RentalReturn, invalidReq driven.InvalidRentalRequestError) {
+	invalidReq = driven.InvalidRentalRequestError{}
 	for _, rental := range request {
 		if film, err := svc.finder.FindBy(rental.FilmName); err != nil {
 			invalidReq.Append(err)

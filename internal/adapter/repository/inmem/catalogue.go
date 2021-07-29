@@ -36,7 +36,7 @@ func (cat *StoreCatalogue) Insert(film domain.Film) error {
 	//case err != nil:
 	//	return fmt.Errorf("unexpected error %w trying to add film %#v", err, film)
 	//case foundFilm != nil:
-	//	return &driven.FilmAlreadyExist{Name: film.Name}
+	//	return &driven.FilmAlreadyExistError{Name: film.Name}
 	//}
 	//
 	//return nil
