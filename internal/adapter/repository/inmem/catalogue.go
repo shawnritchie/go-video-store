@@ -23,24 +23,6 @@ func (cat *StoreCatalogue) Insert(film domain.Film) error {
 	/*
 	 *Adapaters should be dumb variance rules should be part of the service
 	 */
-
-	//if err := film.IsValid(); err != nil {
-	//	return err
-	//}
-	//
-	//foundFilm, err := cat.FindBy(film.Name)
-	//switch {
-	//case errors.As(err, &driven.TypeFilmNotFound):
-	//	*cat = append(*cat, film)
-	//	return nil
-	//case err != nil:
-	//	return fmt.Errorf("unexpected error %w trying to add film %#v", err, film)
-	//case foundFilm != nil:
-	//	return &driven.FilmAlreadyExistError{Name: film.Name}
-	//}
-	//
-	//return nil
-
 	*cat = append(*cat, film)
 	return nil
 }
