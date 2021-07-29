@@ -9,10 +9,10 @@ import (
 )
 
 var films = []domain.Film{
-	{"Matrix 11", "Dwight", domain.New},
-	{"Spider Man", "Dwight", domain.Regular},
-	{"Spider Man 2", "Dwight", domain.Regular},
-	{"Out of Africa", "Dwight", domain.Old},
+	{Name: "Matrix 11", Director: "Dwight", Release: domain.New},
+	{Name: "Spider Man", Director: "Dwight", Release: domain.Regular},
+	{Name: "Spider Man 2", Director: "Dwight", Release: domain.Regular},
+	{Name: "Out of Africa", Director: "Dwight", Release: domain.Old},
 }
 
 func setupCatalogue() (*inmem.StoreCatalogue, driver.Catalogue) {

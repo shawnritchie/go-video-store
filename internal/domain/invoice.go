@@ -33,16 +33,9 @@ func (req *RentalReturn) AddRental(film Film, days Days) {
 }
 
 var pricingStrategies = map[release]Calculator{
-	New:     NewRelease,
-	Regular: RegularRelease,
-	Old:     OldRelease,
-}
-
-func getReleaseCalculator(release release) (Calculator, error) {
-	if err := release.isValid(); err != nil {
-		return nil, err
-	}
-	return pricingStrategies[release], nil
+	New:     newRelease,
+	Regular: regularRelease,
+	Old:     oldRelease,
 }
 
 func (req RentalReturn) Invoice() (i RentalInvoice, e []error) {
@@ -64,16 +57,23 @@ func (req RentalReturn) Invoice() (i RentalInvoice, e []error) {
 	return i, e
 }
 
-func NewRelease(days Days) SEK {
+func getReleaseCalculator(release release) (Calculator, error) {
+	if err := release.isValid(); err != nil {
+		return nil, err
+	}
+	return pricingStrategies[release], nil
+}
+
+func newRelease(days Days) SEK {
 	return SEK(uint64(days) * uint64(PREMIUM))
 }
 
-func RegularRelease(days Days) SEK {
+func regularRelease(days Days) SEK {
 	var gracePeriod = Days(3)
 	return calculatePrice(days, gracePeriod)
 }
 
-func OldRelease(days Days) SEK {
+func oldRelease(days Days) SEK {
 	var gracePeriod = Days(5)
 	return calculatePrice(days, gracePeriod)
 }
