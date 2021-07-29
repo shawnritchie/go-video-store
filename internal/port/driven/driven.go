@@ -26,4 +26,3 @@ type (
 		Invoice(request []FilmReturn) (*domain.RentalInvoice, error)
 	}
 )
-

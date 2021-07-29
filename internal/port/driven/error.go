@@ -3,8 +3,6 @@ package driven
 import "fmt"
 
 type (
-	InvalidRentalRequestError []error
-
 	FilmNotFoundError struct {
 		Name string
 	}
@@ -12,12 +10,14 @@ type (
 	FilmAlreadyExistError struct {
 		Name string
 	}
+
+	InvalidRentalRequestError []error
 )
 
 var (
+	TypeInvalidRentalRequest *InvalidRentalRequestError
 	TypeFilmNotFound         *FilmNotFoundError
 	TypeFilmAlreadyExist     *FilmAlreadyExistError
-	TypeInvalidRentalRequest *InvalidRentalRequestError
 )
 
 func (e *FilmNotFoundError) Error() string {

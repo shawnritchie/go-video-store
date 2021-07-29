@@ -1,9 +1,5 @@
 package domain
 
-import "fmt"
-
-var ErrorUnknownReleaseType = fmt.Errorf("unknown release type must be one of the following releases, %v", releaseTypes)
-
 type (
 	release string
 
@@ -23,7 +19,25 @@ const (
 var releaseTypes = []release{New, Regular, Old}
 
 func (f *Film) IsValid() error {
-	return f.Release.isValid()
+	var errors []error
+	if f.Name == "" {
+		errors = append(errors, EmptyFilmNameError)
+	}
+
+	if f.Director == "" {
+		errors = append(errors, EmptyFilmDirectorError)
+	}
+
+	if err := f.Release.isValid(); err != nil {
+		errors = append(errors, EmptyFilmDirectorError)
+	}
+
+	if len(errors) == 0 {
+		return nil
+	} else {
+		var ret InvalidFilmError = errors
+		return &ret
+	}
 }
 
 func (r *release) isValid() error {
@@ -31,5 +45,5 @@ func (r *release) isValid() error {
 	case Old, Regular, New:
 		return nil
 	}
-	return ErrorUnknownReleaseType
+	return UnknownReleaseError
 }

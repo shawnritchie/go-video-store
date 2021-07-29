@@ -15,61 +15,131 @@ var films = []domain.Film{
 	{Name: "Out of Africa", Director: "Dwight", Release: domain.Old},
 }
 
-func setupCatalogue() (*inmem.StoreCatalogue, driver.Catalogue) {
+type spyCatalogue struct {
+	findBy func(name string) (*domain.Film, error)
+	insert func(film domain.Film) error
+}
+
+func (s *spyCatalogue) FindBy(name string) (*domain.Film, error) {
+	return s.findBy(name)
+}
+
+func (s *spyCatalogue) Insert(film domain.Film) error {
+	return s.insert(film)
+}
+
+func newSpyCatalogue(
+	findBy func(name string) (*domain.Film, error),
+	insert func(film domain.Film) error) *spyCatalogue {
+	return &spyCatalogue{
+		findBy: findBy,
+		insert: insert,
+	}
+}
+
+func setupCatalogue() driver.Catalogue {
 	cat := inmem.StoreCatalogue(films)
-	return &cat, &cat
+	return &cat
+}
+
+func mockFindByError(err error) func(name string) (*domain.Film, error) {
+	return func(name string) (*domain.Film, error) {
+		return nil, err
+	}
 }
 
 func TestStoreService_AddNewFilm(t *testing.T) {
-	repo, catalogue := setupCatalogue()
-	service := New(catalogue, catalogue)
-
+	hasBeenInvoked := false
 	newFilm := domain.Film{Name: "Loki", Director: "Marvel", Release: domain.New}
+
+	catalogue := newSpyCatalogue(
+		mockFindByError(&driven.FilmNotFoundError{Name: newFilm.Name}),
+		func(film domain.Film) error {
+			hasBeenInvoked = true
+			if film != newFilm {
+				t.Errorf("film %+v hasn't been added to catalogue", newFilm)
+			}
+			return nil
+		})
+
+	service := New(catalogue, catalogue)
 	service.AddNew(newFilm.Name, newFilm.Director)
 
-	if (*repo)[4] != newFilm {
+	if !hasBeenInvoked {
 		t.Errorf("film %+v hasn't been added to catalogue", newFilm)
 	}
 }
 
-func TestStoreService_AddRegularFilm(t *testing.T) {
-	repo, catalogue := setupCatalogue()
-	service := New(catalogue, catalogue)
-
-	regularFilm := domain.Film{Name: "Loki", Director: "Marvel", Release: domain.Regular}
-	service.AddRegular(regularFilm.Name, regularFilm.Director)
-
-	if (*repo)[4] != regularFilm {
-		t.Errorf("film %+v hasn't been added to catalogue", regularFilm)
+func TestAddFilm(t *testing.T) {
+	tests := []struct {
+		testName     string
+		insertedFilm domain.Film
+		addFx        func(s *StoreService, f domain.Film)
+	}{
+		{
+			testName:     "addNewFilmTest",
+			insertedFilm: domain.Film{Name: "Loki", Director: "Marvel", Release: domain.New},
+			addFx:        func(s *StoreService, f domain.Film) { s.AddNew(f.Name, f.Director) },
+		},
+		{
+			testName:     "addRegularFilmTest",
+			insertedFilm: domain.Film{Name: "Loki", Director: "Marvel", Release: domain.Regular},
+			addFx:        func(s *StoreService, f domain.Film) { s.AddRegular(f.Name, f.Director) },
+		},
+		{
+			testName:     "addOldFilmTest",
+			insertedFilm: domain.Film{Name: "Loki", Director: "Marvel", Release: domain.Old},
+			addFx:        func(s *StoreService, f domain.Film) { s.AddOld(f.Name, f.Director) },
+		},
 	}
-}
+	for _, test := range tests {
+		t.Run(test.testName, func(t *testing.T) {
+			hasBeenInvoked := false
 
-func TestStoreService_AddOldFilm(t *testing.T) {
-	repo, catalogue := setupCatalogue()
-	service := New(catalogue, catalogue)
+			catalogue := newSpyCatalogue(
+				mockFindByError(&driven.FilmNotFoundError{Name: test.insertedFilm.Name}),
+				func(film domain.Film) error {
+					hasBeenInvoked = true
+					if film != test.insertedFilm {
+						t.Errorf("film %#v hasn't been added to catalogue", test.insertedFilm)
+					}
+					return nil
+				})
 
-	oldFilm := domain.Film{Name: "Loki", Director: "Marvel", Release: domain.Old}
-	service.AddOld(oldFilm.Name, oldFilm.Director)
+			service := New(catalogue, catalogue)
+			test.addFx(service, test.insertedFilm)
 
-	if (*repo)[4] != oldFilm {
-		t.Errorf("film %+v hasn't been added to catalogue", oldFilm)
+			if !hasBeenInvoked {
+				t.Errorf("film %#v hasn't been added to catalogue", test.insertedFilm)
+			}
+		})
 	}
 }
 
 func TestStoreService_FindByName(t *testing.T) {
-	repo, catalogue := setupCatalogue()
-	service := New(catalogue, catalogue)
+	searchFor := domain.Film{Name: "Loki", Director: "Marvel", Release: domain.New}
+	hasBeenInvoked := false
 
-	lookFor := (*repo)[0]
-	if found, err := service.Find(lookFor.Name); err != nil {
-		t.Error(err)
-	} else if *found != lookFor {
-		t.Errorf("found wrong film %#v was looking for %#v", found, lookFor)
+	catalogue := newSpyCatalogue(
+		func(name string) (*domain.Film, error) {
+			hasBeenInvoked = true
+			if name != searchFor.Name {
+				t.Errorf("looking for wrong film expected search was %q, but search for %q", searchFor, name)
+			}
+			return &searchFor, nil
+		},
+		nil)
+
+	service := New(catalogue, catalogue)
+	service.Find(searchFor.Name)
+
+	if !hasBeenInvoked {
+		t.Errorf("findBy hasn't been invoked")
 	}
 }
 
 func TestStoreService_StoreReturn(t *testing.T) {
-	_, catalogue := setupCatalogue()
+	catalogue := setupCatalogue()
 	service := New(catalogue, catalogue)
 
 	duration := uint16(5)
