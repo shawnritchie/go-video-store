@@ -67,7 +67,7 @@ func TestInvoicer_SuccessfullyProcessedReturn(t *testing.T) {
 	handler(server.processReturn)(res, req)
 
 	var invoiceRes invoiceResponse
-	unmarshalBody(res, &invoiceRes)
+	unmarshalBody(t, res, &invoiceRes)
 
 	switch {
 	case len(spyInvoicer.requests) != 1:

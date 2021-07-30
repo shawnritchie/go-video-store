@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -22,7 +23,7 @@ func TestHandler_MissingContentType(t *testing.T) {
 	}).ServeHTTP(res, req)
 
 	var errorResponse Error
-	unmarshalBody(res, &errorResponse)
+	unmarshalBody(t, res, &errorResponse)
 
 	if res.Code != http.StatusBadRequest {
 		t.Errorf("got status %d but wanted %d", res.Code, http.StatusBadRequest)
@@ -46,10 +47,21 @@ func TestHandler_UnhandledError(t *testing.T) {
 	}).ServeHTTP(res, req)
 
 	var errorResponse Error
-	unmarshalBody(res, &errorResponse)
+	unmarshalBody(t, res, &errorResponse)
 
 	if res.Code != http.StatusInternalServerError {
 		t.Errorf("got status %d but wanted %d", res.Code, http.StatusInternalServerError)
+	}
+}
+
+func unmarshalBody(t *testing.T, w *httptest.ResponseRecorder, res interface{}) {
+	reqBody, err := ioutil.ReadAll(w.Body)
+	if err != nil {
+		t.Errorf("request body cannot be read : %w", err)
+	}
+
+	if err := json.Unmarshal(reqBody, &res); err != nil {
+		t.Errorf("Post response cannot be deserialized. %w", err)
 	}
 }
 

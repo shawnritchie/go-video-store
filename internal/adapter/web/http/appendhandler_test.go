@@ -78,7 +78,7 @@ func TestAddFilm(t *testing.T) {
 			}
 
 			var appendResponse appendResponse
-			unmarshalBody(res, &appendResponse)
+			unmarshalBody(t, res, &appendResponse)
 
 			switch {
 			case len(spyAppender.invocations) != 1:

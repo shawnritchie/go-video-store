@@ -1,11 +1,9 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/shawnritchie/go-video-store/internal/domain"
 	"github.com/shawnritchie/go-video-store/internal/port/driven"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -57,7 +55,7 @@ func TestFindRequest_Success(t *testing.T) {
 	handler(server.findFilm)(res, req)
 
 	var searchResponse findResponse
-	unmarshalBody(res, &searchResponse)
+	unmarshalBody(t, res, &searchResponse)
 
 	switch {
 	case spy.findInvocation != 1:
@@ -126,17 +124,4 @@ func TestFindRequest_NoneCataloguedFilm(t *testing.T) {
 	if status != http.StatusNotFound {
 		t.Errorf("got status %d but wanted %d", status, http.StatusNotFound)
 	}
-}
-
-func unmarshalBody(w *httptest.ResponseRecorder, res interface{}) error {
-	reqBody, err := ioutil.ReadAll(w.Body)
-	if err != nil {
-		return fmt.Errorf("request body read error : %w", err)
-	}
-
-	if err := json.Unmarshal(reqBody, &res); err != nil {
-		return NewClientError(err, http.StatusBadRequest, "Bad Request: Post payload cannot be deserialized")
-	}
-
-	return nil
 }
