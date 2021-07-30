@@ -12,7 +12,7 @@ curl -X POST http://localhost:8080/catalogue/film/new -H "Content-Type: applicat
 curl -X POST http://localhost:8080/catalogue/film/regular -H "Content-Type: application/json" -d '{"name":"Black Widow", "director":"Marvel"}'
 curl -X POST http://localhost:8080/catalogue/film/old -H "Content-Type: application/json" -d '{"name":"Morbius", "director":"Marvel"}'
 
-curl -X POST http://localhost:8080/store/return -H "Content-Type: application/json" -d '{"return":[{"film": "Loki", "days": 1}]}'
+curl -X POST http://localhost:8080/store/return -H "Content-Type: application/json" -d '{"return":[{"name": "Loki", "days": 1}]}'
 */
 
 func (s *server) Router() (r *mux.Router) {
