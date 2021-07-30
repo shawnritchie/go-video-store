@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/shawnritchie/go-video-store/internal/domain"
 	"github.com/shawnritchie/go-video-store/internal/port/driven"
 	"io/ioutil"
@@ -43,7 +44,7 @@ func (s *server) addNewFilm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var film appendRequest
-	if err := json.Unmarshal(reqBody, &film); err != nil {
+	if err := json.Unmarshal(reqBody, &film); err != nil || film.validate() {
 		//Handle Corrupted Payload
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -60,11 +61,11 @@ func (s *server) addNewFilm(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	setHeaders(w)
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(appendResponse{
 		Name:     film.Name,
 		Director: film.Director,
-		Release:  domain.Regular,
+		Release:  string(domain.New),
 	})
 }
 
@@ -93,16 +94,12 @@ func (s *server) addRegularFilm(w http.ResponseWriter, r *http.Request) error {
 	json.NewEncoder(w).Encode(appendResponse{
 		Name:     film.Name,
 		Director: film.Director,
-		Release:  domain.Regular,
+		Release:  string(domain.Regular),
 	})
 	return nil
 }
 
-func (s *server) addOldFilm(w http.ResponseWriter, r *http.Request) error {
-	return s.addFilm(w, r, s.appender.AddOld)
-}
-
-func (s *server) addFilm(w http.ResponseWriter, r *http.Request, fx func(name string, director string) error) error {
+func (s *server) addFilm(w http.ResponseWriter, r *http.Request) error {
 	defer r.Body.Close()
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -110,8 +107,30 @@ func (s *server) addFilm(w http.ResponseWriter, r *http.Request, fx func(name st
 	}
 
 	var film appendRequest
-	if err := json.Unmarshal(reqBody, &film); err != nil {
+	if err := json.Unmarshal(reqBody, &film); err != nil || film.validate() {
 		return NewClientError(err, http.StatusBadRequest, "Bad Request: Post payload cannot be deserialized")
+	}
+
+	pathParams := mux.Vars(r)
+	strRelease, ok := pathParams["release"]
+	if !ok {
+		return NewClientError(err, http.StatusBadRequest, "Bad Request: missing release type within request. example: \"/catalogue/film/[new,regular,old]\"")
+	}
+
+	release, err := domain.ParseRelease(strRelease)
+	if err != nil {
+		return NewClientError(err, http.StatusBadRequest, "Bad Request: supported release types \"[new,regular,old]\"")
+	}
+
+	var fx func(name string, director string) error
+
+	switch release {
+	case domain.New:
+		fx = s.appender.AddNew
+	case domain.Regular:
+		fx = s.appender.AddRegular
+	case domain.Old:
+		fx = s.appender.AddOld
 	}
 
 	if err := fx(film.Name, film.Director); err != nil {
@@ -127,7 +146,7 @@ func (s *server) addFilm(w http.ResponseWriter, r *http.Request, fx func(name st
 	json.NewEncoder(w).Encode(appendResponse{
 		Name:     film.Name,
 		Director: film.Director,
-		Release:  domain.Regular,
+		Release:  string(release),
 	})
 	return nil
 }

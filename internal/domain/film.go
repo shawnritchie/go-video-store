@@ -1,5 +1,7 @@
 package domain
 
+import "strings"
+
 type (
 	release string
 
@@ -12,8 +14,8 @@ type (
 
 const (
 	New     release = "New"
-	Regular         = "Regular"
-	Old             = "Old"
+	Regular release = "Regular"
+	Old     release = "Old"
 )
 
 var releaseTypes = []release{New, Regular, Old}
@@ -46,4 +48,16 @@ func (r *release) isValid() error {
 		return nil
 	}
 	return UnknownReleaseError
+}
+
+func ParseRelease(release string) (release, error) {
+	switch strings.ToLower(release) {
+	case strings.ToLower(string(New)):
+		return New, nil
+	case strings.ToLower(string(Regular)):
+		return Regular, nil
+	case strings.ToLower(string(Old)):
+		return Old, nil
+	}
+	return New, UnknownReleaseError
 }
